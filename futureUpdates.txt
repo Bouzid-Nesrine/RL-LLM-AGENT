@@ -1,0 +1,6 @@
+- fine tune it so that it can answer sepecific questions
+- adding the history features : 
+        - make it remember the context
+        - make it remember the old conversations
+- try to handle the voice and the pictures maybe 
+- improve the UI
