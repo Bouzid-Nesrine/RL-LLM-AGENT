@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer Support Agent Evaluation</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d45;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --mistral: #6C757D;
+    --rule: #3b82f6;
+    --rl: #22c55e;
+    --accent: #f59e0b;
+    --danger: #ef4444;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    padding: 40px 48px 32px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, #0a0e1a 0%, #0f172a 100%);
+  }
+  .header-badge {
+    display: inline-block;
+    background: rgba(245,158,11,0.15);
+    border: 1px solid rgba(245,158,11,0.3);
+    color: var(--accent);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 3px;
+    margin-bottom: 16px;
+    letter-spacing: 1px;
+  }
+  .header h1 {
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+  .header h1 span { color: var(--accent); }
+  .header p { color: var(--muted); font-size: 14px; }
+
+  /* ── LAYOUT ── */
+  .container { max-width: 1400px; margin: 0 auto; padding: 0 48px 80px; }
+  .section { margin-top: 52px; }
+  .section-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── AGENT LEGEND ── */
+  .agent-legend {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .legend-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── SUMMARY CARDS ── */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .agent-card {
+    background: var(--surface);
+    padding: 28px 24px;
+    position: relative;
+  }
+  .agent-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .agent-card.mistral::before { background: var(--mistral); }
+  .agent-card.rule::before { background: var(--rule); }
+  .agent-card.rl::before { background: var(--rl); }
+  .agent-card-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+  }
+  .agent-card-name span {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  .card-metric {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .card-metric:last-child { border-bottom: none; }
+  .metric-label { color: var(--muted); font-size: 12px; }
+  .metric-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .metric-value.good { color: var(--rl); }
+  .metric-value.mid { color: var(--rule); }
+  .metric-value.bad { color: var(--danger); }
+
+  /* ── CHART GRID ── */
+  .chart-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .chart-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+  }
+  .chart-card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .chart-card-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+  .chart-wrap { position: relative; }
+  .chart-wrap canvas { max-height: 280px; }
+  .chart-wrap.tall canvas { max-height: 380px; }
+  .chart-wrap.radar canvas { max-height: 320px; }
+
+  /* ── COMPARISON TABLE ── */
+  .comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .comparison-table th {
+    background: var(--surface2);
+    padding: 10px 16px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .comparison-table td {
+    padding: 9px 16px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+  }
+  .comparison-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .comparison-table tr:last-child td { border-bottom: none; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .badge-success { background: rgba(34,197,94,0.15); color: var(--rl); }
+  .badge-mid { background: rgba(59,130,246,0.15); color: var(--rule); }
+  .badge-fail { background: rgba(239,68,68,0.15); color: var(--danger); }
+
+  /* ── CONVERSATION VIEWER ── */
+  .convo-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .convo-controls select, .convo-controls button {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 7px 14px;
+    border-radius: 5px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .convo-controls button:hover { border-color: var(--accent); color: var(--accent); }
+  .convo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .convo-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .convo-panel-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .convo-panel-name {
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .convo-panel-badge {
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+  .convo-body {
+    padding: 14px;
+    max-height: 360px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .convo-turn {}
+  .turn-label {
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .bubble-agent {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 0 8px 8px 8px;
+    padding: 8px 12px;
+    font-size: 12px;
+    line-height: 1.5;
+    margin-bottom: 4px;
+  }
+  .bubble-customer {
+    background: rgba(245,158,11,0.08);
+    border: 1px solid rgba(245,158,11,0.2);
+    border-radius: 8px 0 8px 8px;
+    padding: 8px 12px;
+    font-size: 12px;
+    line-height: 1.5;
+    text-align: right;
+    color: #d1b06b;
+  }
+  .action-chip {
+    display: inline-block;
+    font-size: 9px;
+    font-family: 'IBM Plex Mono', monospace;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-bottom: 4px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .sentiment-tag {
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .convo-opening {
+    background: rgba(245,158,11,0.08);
+    border: 1px solid rgba(245,158,11,0.2);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: #d1b06b;
+    line-height: 1.5;
+    margin-bottom: 6px;
+  }
+
+  /* ── QUALITATIVE TABLE ── */
+  .qual-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .qual-cell {
+    background: var(--surface);
+    padding: 16px 14px;
+    text-align: center;
+  }
+  .qual-cell.header-cell {
+    background: var(--surface2);
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+  .qual-cell.agent-label {
+    background: var(--surface2);
+    font-size: 12px;
+    font-weight: 600;
+    text-align: left;
+    padding-left: 16px;
+  }
+  .score-display {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .score-bar {
+    height: 3px;
+    border-radius: 2px;
+    background: var(--border);
+    margin-top: 4px;
+    overflow: hidden;
+  }
+  .score-fill { height: 100%; border-radius: 2px; transition: width 0.6s; }
+
+  /* ── LOADING OVERLAY ── */
+  #loading-overlay {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    transition: opacity 0.4s;
+  }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .load-text { font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--muted); }
+
+  /* ── NO DATA STATE ── */
+  .no-data {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+    gap: 12px;
+  }
+  .no-data-icon { font-size: 48px; }
+  .no-data h3 { font-size: 18px; font-weight: 600; }
+  .no-data p { color: var(--muted); font-size: 13px; max-width: 400px; }
+  .no-data code {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media (max-width: 900px) {
+    .container { padding: 0 20px 60px; }
+    .header { padding: 24px 20px; }
+    .summary-grid, .chart-grid-2, .chart-grid-3, .convo-grid { grid-template-columns: 1fr; }
+    .qual-grid { grid-template-columns: 1fr 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="load-text">Loading evaluation data...</div>
+</div>
+
+<header class="header">
+  <div class="header-badge">EVALUATION REPORT</div>
+  <h1>Customer Support Agent <span>Comparison</span></h1>
+  <p id="header-subtitle">Mistral-Only vs Rule-Based + Mistral vs RL + Mistral · 20 scenarios · 11 issue types</p>
+</header>
+
+<div class="container">
+
+  <!-- LEGEND -->
+  <div class="section">
+    <div class="agent-legend">
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#6C757D"></div>
+        Mistral-Only
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#3b82f6"></div>
+        Rule-Based + Mistral
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#22c55e"></div>
+        RL + Mistral
+      </div>
+    </div>
+  </div>
+
+  <!-- SUMMARY CARDS -->
+  <div class="section">
+    <div class="section-title">01 — Agent Summary</div>
+    <div class="summary-grid" id="summary-cards">
+      <div class="no-data"><div class="no-data-icon">📊</div><p>Run evaluation to see results</p></div>
+    </div>
+  </div>
+
+  <!-- COMPARISON TABLE -->
+  <div class="section">
+    <div class="section-title">02 — Full Metrics Comparison</div>
+    <div class="chart-card">
+      <div id="comparison-table-wrap"></div>
+    </div>
+  </div>
+
+  <!-- MAIN CHARTS ROW -->
+  <div class="section">
+    <div class="section-title">03 — Quantitative Analysis</div>
+    <div class="chart-grid-2">
+      <div class="chart-card">
+        <div class="chart-card-title">Success Rate by Issue Type</div>
+        <div class="chart-card-sub">% of scenarios successfully resolved per issue category</div>
+        <div class="chart-wrap tall"><canvas id="chart-issue-type"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">Success Rate by Initial Sentiment</div>
+        <div class="chart-card-sub">How each agent handles escalating customer anger</div>
+        <div class="chart-wrap"><canvas id="chart-sentiment"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECOND ROW -->
+  <div style="margin-top:20px">
+    <div class="chart-grid-3">
+      <div class="chart-card">
+        <div class="chart-card-title">Average Reward</div>
+        <div class="chart-card-sub">Cumulative episode reward</div>
+        <div class="chart-wrap"><canvas id="chart-reward"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">Average Turns to Resolution</div>
+        <div class="chart-card-sub">Fewer turns = more efficient</div>
+        <div class="chart-wrap"><canvas id="chart-turns"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">Success Rate by Difficulty</div>
+        <div class="chart-card-sub">easy / medium / hard scenarios</div>
+        <div class="chart-wrap"><canvas id="chart-difficulty"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTION DISTRIBUTION -->
+  <div class="section">
+    <div class="section-title">04 — Action Distribution</div>
+    <div class="chart-grid-3">
+      <div class="chart-card">
+        <div class="chart-card-title">Mistral-Only</div>
+        <div class="chart-card-sub">Action usage %</div>
+        <div class="chart-wrap radar"><canvas id="chart-radar-mistral"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">Rule-Based + Mistral</div>
+        <div class="chart-card-sub">Action usage %</div>
+        <div class="chart-wrap radar"><canvas id="chart-radar-rule"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">RL + Mistral</div>
+        <div class="chart-card-sub">Action usage %</div>
+        <div class="chart-wrap radar"><canvas id="chart-radar-rl"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SENTIMENT RECOVERY -->
+  <div class="section">
+    <div class="section-title">05 — Sentiment Recovery Trajectory</div>
+    <div class="chart-card">
+      <div class="chart-card-title">Average Sentiment Score by Turn</div>
+      <div class="chart-card-sub">+2=satisfied, +1=neutral, 0=frustrated, -1=angry, -2=very_angry · higher is better</div>
+      <div class="chart-wrap"><canvas id="chart-sentiment-recovery" style="max-height:220px"></canvas></div>
+    </div>
+  </div>
+
+  <!-- QUALITATIVE SCORES -->
+  <div class="section">
+    <div class="section-title">06 — Qualitative Evaluation (Gemini Judge)</div>
+    <div id="qualitative-section">
+      <div class="chart-card">
+        <div class="no-data">
+          <div class="no-data-icon">🤖</div>
+          <h3>Gemini Evaluation Pending</h3>
+          <p>Run <code>python gemini_judge.py</code> after completing the agent evaluation to see qualitative scores.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PER-SCENARIO RESULTS TABLE -->
+  <div class="section">
+    <div class="section-title">07 — Per-Scenario Results</div>
+    <div class="chart-card">
+      <div id="scenario-table-wrap"></div>
+    </div>
+  </div>
+
+  <!-- CONVERSATION VIEWER -->
+  <div class="section">
+    <div class="section-title">08 — Conversation Viewer</div>
+    <div class="convo-controls">
+      <select id="convo-scenario-select">
+        <option value="">— Select scenario —</option>
+      </select>
+      <span style="color:var(--muted);font-size:12px">Compare all 3 agents side by side</span>
+    </div>
+    <div class="convo-grid" id="convo-grid">
+      <div class="chart-card" style="grid-column:1/-1">
+        <div class="no-data">
+          <div class="no-data-icon">💬</div>
+          <p>Select a scenario above to view conversations</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// DATA INJECTION POINT
+// The generate_report.py script replaces METRICS_DATA with real data.
+// For standalone demo, sample data is used as fallback.
+// ═══════════════════════════════════════════════════════════════════
+const INJECTED_METRICS = /*METRICS_DATA*/null/*END_METRICS*/;
+
+// ─── SAMPLE DATA (used when no real data is injected) ───
+const SAMPLE_METRICS = {
+  agent_order: ["Mistral-Only", "Rule-Based + Mistral", "RL + Mistral"],
+  agent_colors: {"Mistral-Only":"#6C757D","Rule-Based + Mistral":"#3b82f6","RL + Mistral":"#22c55e"},
+  agent_short: {"Mistral-Only":"Mistral","Rule-Based + Mistral":"Rule-Based","RL + Mistral":"RL+Mistral"},
+  agent_summary: {
+    "Mistral-Only":         { success_rate:52.0, avg_reward:1.21, avg_turns:5.8, avg_sentiment_delta:-0.3, escalation_rate:18.0, resolution_rate:34.0, hit_max_turns_rate:25.0, slots_complete_rate:62.0, avg_elapsed_sec:4.2 },
+    "Rule-Based + Mistral": { success_rate:70.0, avg_reward:2.45, avg_turns:4.5, avg_sentiment_delta:0.4,  escalation_rate:22.0, resolution_rate:55.0, hit_max_turns_rate:8.0,  slots_complete_rate:88.0, avg_elapsed_sec:4.8 },
+    "RL + Mistral":         { success_rate:87.0, avg_reward:4.10, avg_turns:3.8, avg_sentiment_delta:0.9,  escalation_rate:25.0, resolution_rate:62.0, hit_max_turns_rate:2.0,  slots_complete_rate:96.0, avg_elapsed_sec:5.1 }
+  },
+  per_issue_type: {
+    "Mistral-Only":         {"delivery_issue":40,"billing_error":55,"fraud_report":45,"account_access":70,"shipping_damage":50,"technical_support":65,"refund_request":55,"product_defect":60,"product_inquiry":75,"response_delay":70,"account_management":80},
+    "Rule-Based + Mistral": {"delivery_issue":55,"billing_error":75,"fraud_report":70,"account_access":90,"shipping_damage":65,"technical_support":80,"refund_request":65,"product_defect":75,"product_inquiry":90,"response_delay":85,"account_management":95},
+    "RL + Mistral":         {"delivery_issue":70,"billing_error":90,"fraud_report":95,"account_access":100,"shipping_damage":80,"technical_support":90,"refund_request":75,"product_defect":90,"product_inquiry":100,"response_delay":95,"account_management":100}
+  },
+  issue_types: ["delivery_issue","billing_error","fraud_report","account_access","shipping_damage","technical_support","refund_request","product_defect","product_inquiry","response_delay","account_management"],
+  per_sentiment: {
+    "Mistral-Only":         {"neutral":70,"frustrated":60,"angry":40,"very_angry":25},
+    "Rule-Based + Mistral": {"neutral":90,"frustrated":75,"angry":60,"very_angry":45},
+    "RL + Mistral":         {"neutral":100,"frustrated":90,"angry":80,"very_angry":70}
+  },
+  per_difficulty: {
+    "Mistral-Only":         {"easy":70,"medium":52,"hard":32},
+    "Rule-Based + Mistral": {"easy":90,"medium":72,"hard":48},
+    "RL + Mistral":         {"easy":100,"medium":88,"hard":72}
+  },
+  action_distribution: {
+    "Mistral-Only":         {"greet":8,"ask_info":22,"confirm_details":14,"provide_info":8,"tool_query":6,"resolve":22,"escalate":8,"apologize":10,"end_chat":2},
+    "Rule-Based + Mistral": {"greet":5,"ask_info":28,"confirm_details":18,"provide_info":4,"tool_query":2,"resolve":24,"escalate":10,"apologize":8,"end_chat":1},
+    "RL + Mistral":         {"greet":2,"ask_info":30,"confirm_details":20,"provide_info":2,"tool_query":1,"resolve":23,"escalate":12,"apologize":9,"end_chat":1}
+  },
+  qualitative_summary: {
+    "Mistral-Only":         {"naturalness":3.2,"empathy":2.8,"task_helpfulness":2.5,"coherence":3.0,"policy_compliance":2.4,"composite":2.78},
+    "Rule-Based + Mistral": {"naturalness":3.5,"empathy":3.4,"task_helpfulness":3.8,"coherence":3.9,"policy_compliance":3.7,"composite":3.66},
+    "RL + Mistral":         {"naturalness":4.0,"empathy":4.1,"task_helpfulness":4.4,"coherence":4.3,"policy_compliance":4.5,"composite":4.26}
+  },
+  sentiment_recovery: {
+    "Mistral-Only":         {"1":-1.2,"2":-0.9,"3":-0.8,"4":-0.6,"5":-0.5},
+    "Rule-Based + Mistral": {"1":-1.2,"2":-0.6,"3":-0.1,"4":0.2,"5":0.4},
+    "RL + Mistral":         {"1":-1.2,"2":-0.3,"3":0.4,"4":0.8,"5":1.0}
+  },
+  raw_results: [],
+  qualitative_scores: []
+};
+
+const M = INJECTED_METRICS || SAMPLE_METRICS;
+const AGENTS = M.agent_order;
+const COLORS = M.agent_colors;
+
+// ─── CHART DEFAULTS ───
+Chart.defaults.color = '#64748b';
+Chart.defaults.font.family = "'IBM Plex Mono', monospace";
+Chart.defaults.font.size = 11;
+
+const gridColor = '#1e2d45';
+const baseChartOptions = {
+  responsive: true,
+  maintainAspectRatio: true,
+  plugins: { legend: { display: false } },
+  scales: {
+    x: { grid: { color: gridColor }, ticks: { color: '#64748b' } },
+    y: { grid: { color: gridColor }, ticks: { color: '#64748b' } }
+  }
+};
+
+function getColor(agent) { return COLORS[agent] || '#888'; }
+
+// ─── HELPERS ───
+function scoreClass(val, metric) {
+  if (metric === 'success_rate' || metric === 'slots_complete_rate') {
+    return val >= 80 ? 'good' : val >= 60 ? 'mid' : 'bad';
+  }
+  if (metric === 'avg_reward') return val >= 3 ? 'good' : val >= 1.5 ? 'mid' : 'bad';
+  if (metric === 'avg_turns') return val <= 4 ? 'good' : val <= 5.5 ? 'mid' : 'bad';
+  if (metric === 'hit_max_turns_rate') return val <= 5 ? 'good' : val <= 15 ? 'mid' : 'bad';
+  return '';
+}
+
+function scoreColor(score) {
+  if (score === null) return '#64748b';
+  if (score >= 4) return '#22c55e';
+  if (score >= 3) return '#3b82f6';
+  if (score >= 2) return '#f59e0b';
+  return '#ef4444';
+}
+
+// ═══════════════════════
+// BUILD SUMMARY CARDS
+// ═══════════════════════
+function buildSummaryCards() {
+  const el = document.getElementById('summary-cards');
+  if (!M.agent_summary || !Object.keys(M.agent_summary).length) return;
+
+  const classMap = { "Mistral-Only": "mistral", "Rule-Based + Mistral": "rule", "RL + Mistral": "rl" };
+  const dotColor = { "Mistral-Only": "#6C757D", "Rule-Based + Mistral": "#3b82f6", "RL + Mistral": "#22c55e" };
+
+  const metrics_display = [
+    ["success_rate",       "Success Rate",          v => v + "%"],
+    ["avg_reward",         "Avg Reward",             v => (v > 0 ? "+" : "") + v],
+    ["avg_turns",          "Avg Turns",              v => v],
+    ["avg_sentiment_delta","Sentiment Delta",        v => (v > 0 ? "+" : "") + v],
+    ["escalation_rate",    "Escalation Rate",        v => v + "%"],
+    ["slots_complete_rate","Slots Completion",       v => v + "%"],
+    ["hit_max_turns_rate", "Hit Max Turns",          v => v + "%"],
+  ];
+
+  el.innerHTML = AGENTS.map(agent => {
+    const s = M.agent_summary[agent] || {};
+    const cls = classMap[agent] || '';
+    const dot = dotColor[agent];
+    return `
+      <div class="agent-card ${cls}">
+        <div class="agent-card-name">
+          <span style="background:${dot}"></span>${agent}
+        </div>
+        ${metrics_display.map(([key, label, fmt]) => {
+          const val = s[key] ?? '—';
+          const formatted = val === '—' ? '—' : fmt(val);
+          const cls2 = val === '—' ? '' : scoreClass(val, key);
+          return `<div class="card-metric">
+            <span class="metric-label">${label}</span>
+            <span class="metric-value ${cls2}">${formatted}</span>
+          </div>`;
+        }).join('')}
+      </div>`;
+  }).join('');
+}
+
+// ═══════════════════════
+// COMPARISON TABLE
+// ═══════════════════════
+function buildComparisonTable() {
+  const el = document.getElementById('comparison-table-wrap');
+  if (!M.agent_summary) return;
+
+  const rows = [
+    ["Metric", ...AGENTS.map(a => M.agent_short[a] || a)],
+    ["Success Rate",           ...AGENTS.map(a => (M.agent_summary[a]?.success_rate ?? '—') + '%')],
+    ["Avg Reward",             ...AGENTS.map(a => { const v=M.agent_summary[a]?.avg_reward; return v!=null?(v>0?'+':'')+v:'—'; })],
+    ["Avg Turns",              ...AGENTS.map(a => M.agent_summary[a]?.avg_turns ?? '—')],
+    ["Sentiment Delta",        ...AGENTS.map(a => { const v=M.agent_summary[a]?.avg_sentiment_delta; return v!=null?(v>0?'+':'')+v:'—'; })],
+    ["Escalation Rate",        ...AGENTS.map(a => (M.agent_summary[a]?.escalation_rate ?? '—') + '%')],
+    ["Resolution Rate",        ...AGENTS.map(a => (M.agent_summary[a]?.resolution_rate ?? '—') + '%')],
+    ["Slots Completion",       ...AGENTS.map(a => (M.agent_summary[a]?.slots_complete_rate ?? '—') + '%')],
+    ["Hit Max Turns",          ...AGENTS.map(a => (M.agent_summary[a]?.hit_max_turns_rate ?? '—') + '%')],
+  ];
+
+  const [header, ...body] = rows;
+  el.innerHTML = `
+    <table class="comparison-table">
+      <thead>
+        <tr>${header.map((h, i) => `<th style="${i>0?'color:'+getColor(AGENTS[i-1]):''};">${h}</th>`).join('')}</tr>
+      </thead>
+      <tbody>
+        ${body.map(row => `<tr>${row.map((cell,i) => `<td>${cell}</td>`).join('')}</tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+// ═══════════════════════
+// CHARTS
+// ═══════════════════════
+function buildIssueTypeChart() {
+  const issues = M.issue_types || [];
+  const shortLabels = issues.map(i => i.replace(/_/g,' ').replace('issue','iss.').replace('request','req.'));
+  
+  new Chart(document.getElementById('chart-issue-type'), {
+    type: 'bar',
+    data: {
+      labels: shortLabels,
+      datasets: AGENTS.map(a => ({
+        label: a,
+        data: issues.map(i => M.per_issue_type?.[a]?.[i] ?? 0),
+        backgroundColor: getColor(a) + 'bb',
+        borderColor: getColor(a),
+        borderWidth: 1,
+        borderRadius: 3,
+      }))
+    },
+    options: {
+      ...baseChartOptions,
+      plugins: { legend: { display: true, labels: { color: '#94a3b8', boxWidth: 10, font: {size:11} } } },
+      scales: {
+        x: { grid:{color:gridColor}, ticks:{color:'#64748b', maxRotation:45} },
+        y: { grid:{color:gridColor}, ticks:{color:'#64748b', callback: v => v+'%'}, max:105 }
+      }
+    }
+  });
+}
+
+function buildSentimentChart() {
+  const sents = M.sentiments || ["neutral","frustrated","angry","very_angry"];
+  new Chart(document.getElementById('chart-sentiment'), {
+    type: 'line',
+    data: {
+      labels: sents,
+      datasets: AGENTS.map(a => ({
+        label: a,
+        data: sents.map(s => M.per_sentiment?.[a]?.[s] ?? null),
+        borderColor: getColor(a),
+        backgroundColor: getColor(a) + '22',
+        borderWidth: 2.5,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        tension: 0.3,
+        fill: false
+      }))
+    },
+    options: {
+      ...baseChartOptions,
+      plugins: { legend: { display: true, labels: { color: '#94a3b8', boxWidth: 10, font:{size:11} } } },
+      scales: {
+        x: { grid:{color:gridColor}, ticks:{color:'#64748b'} },
+        y: { grid:{color:gridColor}, ticks:{color:'#64748b', callback:v=>v+'%'}, min:0, max:105 }
+      }
+    }
+  });
+}
+
+function buildRewardChart() {
+  new Chart(document.getElementById('chart-reward'), {
+    type: 'bar',
+    data: {
+      labels: AGENTS.map(a => M.agent_short[a] || a),
+      datasets: [{
+        data: AGENTS.map(a => M.agent_summary?.[a]?.avg_reward ?? 0),
+        backgroundColor: AGENTS.map(a => getColor(a) + 'bb'),
+        borderColor: AGENTS.map(a => getColor(a)),
+        borderWidth: 1, borderRadius: 4
+      }]
+    },
+    options: {
+      ...baseChartOptions,
+      scales: {
+        x: { grid:{color:gridColor}, ticks:{color:'#64748b'} },
+        y: { grid:{color:gridColor}, ticks:{color:'#64748b'} }
+      }
+    }
+  });
+}
+
+function buildTurnsChart() {
+  new Chart(document.getElementById('chart-turns'), {
+    type: 'bar',
+    data: {
+      labels: AGENTS.map(a => M.agent_short[a] || a),
+      datasets: [{
+        data: AGENTS.map(a => M.agent_summary?.[a]?.avg_turns ?? 0),
+        backgroundColor: AGENTS.map(a => getColor(a) + 'bb'),
+        borderColor: AGENTS.map(a => getColor(a)),
+        borderWidth: 1, borderRadius: 4
+      }]
+    },
+    options: {
+      ...baseChartOptions,
+      scales: {
+        x: { grid:{color:gridColor}, ticks:{color:'#64748b'} },
+        y: { grid:{color:gridColor}, ticks:{color:'#64748b'}, min:0 }
+      }
+    }
+  });
+}
+
+function buildDifficultyChart() {
+  const diffs = ["easy","medium","hard"];
+  new Chart(document.getElementById('chart-difficulty'), {
+    type: 'bar',
+    data: {
+      labels: diffs,
+      datasets: AGENTS.map(a => ({
+        label: M.agent_short[a] || a,
+        data: diffs.map(d => M.per_difficulty?.[a]?.[d] ?? 0),
+        backgroundColor: getColor(a) + 'bb',
+        borderColor: getColor(a),
+        borderWidth: 1, borderRadius: 3,
+      }))
+    },
+    options: {
+      ...baseChartOptions,
+      plugins: { legend: { display: true, labels: { color: '#94a3b8', boxWidth:10, font:{size:11} } } },
+      scales: {
+        x: { grid:{color:gridColor}, ticks:{color:'#64748b'} },
+        y: { grid:{color:gridColor}, ticks:{color:'#64748b', callback:v=>v+'%'}, max:105 }
+      }
+    }
+  });
+}
+
+function buildRadarCharts() {
+  const actions = ["greet","ask_info","confirm","provide_info","tool_query","resolve","escalate","apologize","end_chat"];
+  const fullActions = ["greet","ask_info","confirm_details","provide_info","tool_query","resolve","escalate","apologize","end_chat"];
+  const canvasIds = ['chart-radar-mistral','chart-radar-rule','chart-radar-rl'];
+  
+  AGENTS.forEach((agent, i) => {
+    const dist = M.action_distribution?.[agent] || {};
+    new Chart(document.getElementById(canvasIds[i]), {
+      type: 'polarArea',
+      data: {
+        labels: actions,
+        datasets: [{
+          data: fullActions.map(a => dist[a] ?? 0),
+          backgroundColor: fullActions.map((_, j) => `hsl(${j*40}, 60%, 45%, 0.6)`),
+          borderColor: fullActions.map((_, j) => `hsl(${j*40}, 60%, 55%)`),
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: true, position: 'bottom', labels: { color:'#64748b', boxWidth:8, font:{size:10} } }
+        },
+        scales: {
+          r: { grid: { color: gridColor }, ticks: { color:'#64748b', backdropColor:'transparent', font:{size:9} } }
+        }
+      }
+    });
+  });
+}
+
+function buildSentimentRecoveryChart() {
+  const allTurns = new Set();
+  AGENTS.forEach(a => {
+    Object.keys(M.sentiment_recovery?.[a] || {}).forEach(t => allTurns.add(parseInt(t)));
+  });
+  const turns = Array.from(allTurns).sort((a,b)=>a-b);
+  if (!turns.length) return;
+
+  new Chart(document.getElementById('chart-sentiment-recovery'), {
+    type: 'line',
+    data: {
+      labels: turns.map(t => 'Turn ' + t),
+      datasets: AGENTS.map(a => ({
+        label: a,
+        data: turns.map(t => M.sentiment_recovery?.[a]?.[t] ?? null),
+        borderColor: getColor(a),
+        backgroundColor: getColor(a) + '11',
+        borderWidth: 2.5,
+        pointRadius: 4,
+        tension: 0.4,
+        fill: true,
+        spanGaps: true
+      }))
+    },
+    options: {
+      ...baseChartOptions,
+      plugins: { legend: { display: true, labels: { color:'#94a3b8', boxWidth:10, font:{size:11} } } },
+      scales: {
+        x: { grid:{color:gridColor}, ticks:{color:'#64748b'} },
+        y: {
+          grid:{color:gridColor},
+          ticks:{color:'#64748b', callback: v => ['very_angry','angry','frustrated','neutral','satisfied'][v+2] || v},
+          min:-2.2, max:2.2
+        }
+      }
+    }
+  });
+}
+
+// ═══════════════════════
+// QUALITATIVE SECTION
+// ═══════════════════════
+function buildQualitativeSection() {
+  const qs = M.qualitative_summary;
+  if (!qs || !Object.keys(qs).length) return;
+  
+  const hasData = AGENTS.some(a => qs[a]?.composite !== null);
+  if (!hasData) return;
+
+  const dims = ["naturalness","empathy","task_helpfulness","coherence","policy_compliance"];
+  const dimLabels = { naturalness:"Naturalness", empathy:"Empathy", task_helpfulness:"Task Help", coherence:"Coherence", policy_compliance:"Policy" };
+
+  const el = document.getElementById('qualitative-section');
+
+  // Score grid
+  const grid = document.createElement('div');
+  grid.className = 'qual-grid';
+  grid.style.gridTemplateColumns = `180px repeat(${dims.length}, 1fr)`;
+
+  // Header row
+  grid.innerHTML = `<div class="qual-cell header-cell">Agent</div>` +
+    dims.map(d => `<div class="qual-cell header-cell">${dimLabels[d]}</div>`).join('');
+
+  // Data rows
+  AGENTS.forEach(agent => {
+    const scores = qs[agent] || {};
+    const dotColor = getColor(agent);
+    grid.innerHTML += `
+      <div class="qual-cell agent-label" style="border-left:3px solid ${dotColor}">
+        ${M.agent_short[agent] || agent}
+      </div>
+      ${dims.map(d => {
+        const s = scores[d];
+        const pct = s ? (s / 5 * 100) : 0;
+        const c = scoreColor(s);
+        return `<div class="qual-cell">
+          <div class="score-display" style="color:${c}">${s ?? '—'}</div>
+          <div class="score-bar"><div class="score-fill" style="width:${pct}%;background:${c}"></div></div>
+        </div>`;
+      }).join('')}`;
+  });
+
+  el.innerHTML = '';
+  el.appendChild(grid);
+
+  // Radar chart for qualitative
+  const chartCard = document.createElement('div');
+  chartCard.className = 'chart-card';
+  chartCard.style.marginTop = '16px';
+  chartCard.innerHTML = `
+    <div class="chart-card-title">Qualitative Radar Comparison</div>
+    <div class="chart-card-sub">All 5 dimensions scored 1–5 by Gemini</div>
+    <div class="chart-wrap radar" style="max-width:500px;margin:0 auto"><canvas id="chart-qual-radar"></canvas></div>`;
+  el.appendChild(chartCard);
+
+  new Chart(document.getElementById('chart-qual-radar'), {
+    type: 'radar',
+    data: {
+      labels: dims.map(d => dimLabels[d]),
+      datasets: AGENTS.map(agent => ({
+        label: agent,
+        data: dims.map(d => qs[agent]?.[d] ?? 0),
+        borderColor: getColor(agent),
+        backgroundColor: getColor(agent) + '22',
+        borderWidth: 2,
+        pointRadius: 3,
+        pointBackgroundColor: getColor(agent)
+      }))
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: true, labels: { color:'#94a3b8', boxWidth:10, font:{size:11} } } },
+      scales: {
+        r: {
+          min: 0, max: 5,
+          grid: { color: gridColor },
+          ticks: { backdropColor:'transparent', color:'#64748b', stepSize:1, font:{size:10} },
+          pointLabels: { color:'#94a3b8', font:{size:11} }
+        }
+      }
+    }
+  });
+}
+
+// ═══════════════════════
+// PER-SCENARIO TABLE
+// ═══════════════════════
+function buildScenarioTable() {
+  const el = document.getElementById('scenario-table-wrap');
+  const results = M.raw_results || [];
+  if (!results.length) {
+    el.innerHTML = `<div class="no-data"><div class="no-data-icon">📋</div><p>Run evaluation to see per-scenario results</p></div>`;
+    return;
+  }
+
+  const scenarios = [...new Set(results.map(r => r.scenario_id))];
+  const byScenario = {};
+  results.forEach(r => {
+    if (!byScenario[r.scenario_id]) byScenario[r.scenario_id] = {};
+    byScenario[r.scenario_id][r.agent_name] = r;
+  });
+
+  el.innerHTML = `
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th>Scenario</th><th>Issue</th><th>Sentiment</th>
+          ${AGENTS.map(a => `<th style="color:${getColor(a)}">${M.agent_short[a]||a}</th>`).join('')}
+        </tr>
+      </thead>
+      <tbody>
+        ${scenarios.map(sid => {
+          const row = byScenario[sid];
+          const first = Object.values(row)[0] || {};
+          return `<tr>
+            <td>${sid}</td>
+            <td>${(first.issue_type||'').replace(/_/g,' ')}</td>
+            <td>${first.initial_sentiment||''}</td>
+            ${AGENTS.map(a => {
+              const r = row[a];
+              if (!r) return '<td>—</td>';
+              const badge = r.success
+                ? `<span class="badge badge-success">✓</span>`
+                : `<span class="badge badge-fail">✗</span>`;
+              return `<td>${badge} ${r.total_reward>0?'+':''}${r.total_reward} · ${r.turns}t</td>`;
+            }).join('')}
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+}
+
+// ═══════════════════════
+// CONVERSATION VIEWER
+// ═══════════════════════
+function buildConvoViewer() {
+  const results = M.raw_results || [];
+  if (!results.length) return;
+
+  const scenarios = [...new Set(results.map(r => r.scenario_id))];
+  const sel = document.getElementById('convo-scenario-select');
+  scenarios.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s; opt.textContent = s;
+    sel.appendChild(opt);
+  });
+
+  const byScenario = {};
+  results.forEach(r => {
+    if (!byScenario[r.scenario_id]) byScenario[r.scenario_id] = {};
+    byScenario[r.scenario_id][r.agent_name] = r;
+  });
+
+  sel.addEventListener('change', () => {
+    const sid = sel.value;
+    if (!sid) return;
+    const row = byScenario[sid] || {};
+    renderConvos(row);
+  });
+}
+
+function renderConvos(row) {
+  const grid = document.getElementById('convo-grid');
+  const classMap = {"Mistral-Only":"mistral","Rule-Based + Mistral":"rule","RL + Mistral":"rl"};
+  const dotColor = {"Mistral-Only":"#6C757D","Rule-Based + Mistral":"#3b82f6","RL + Mistral":"#22c55e"};
+  const actionColors = {
+    greet:'#6366f1',ask_info:'#0ea5e9',confirm_details:'#8b5cf6',
+    apologize:'#f59e0b',resolve:'#22c55e',escalate:'#ef4444',
+    provide_info:'#10b981',tool_query:'#64748b',end_chat:'#374151'
+  };
+
+  grid.innerHTML = AGENTS.map(agent => {
+    const r = row[agent];
+    if (!r) return `<div class="convo-panel"><div class="convo-panel-header"><div class="convo-panel-name">${agent}</div></div><div class="convo-body"><p style="color:var(--muted);font-size:12px">No data</p></div></div>`;
+
+    const badge = r.success
+      ? `<span class="convo-panel-badge badge-success">SUCCESS</span>`
+      : `<span class="convo-panel-badge badge-fail">FAIL</span>`;
+    const color = dotColor[agent];
+    
+    const turns = (r.conversation_history || []).map(h => {
+      const ac = actionColors[h.action] || '#888';
+      return `<div class="convo-turn">
+        <div class="turn-label">Turn ${h.turn}</div>
+        <span class="action-chip" style="background:${ac}22;color:${ac};border:1px solid ${ac}44">${h.action}</span>
+        <div class="bubble-agent">${h.agent_says || '—'}</div>
+        <div class="bubble-customer">${h.customer_says || ''}</div>
+        <div class="sentiment-tag">→ ${h.sentiment_after}</div>
+      </div>`;
+    }).join('');
+
+    return `
+      <div class="convo-panel">
+        <div class="convo-panel-header" style="border-left:3px solid ${color}">
+          <div class="convo-panel-name">${agent}</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span style="font-size:10px;font-family:monospace;color:var(--muted)">${r.turns}T · ${r.total_reward>0?'+':''}${r.total_reward}R</span>
+            ${badge}
+          </div>
+        </div>
+        <div class="convo-body">
+          <div class="convo-opening">${r.opening_message || ''}</div>
+          ${turns || '<p style="color:var(--muted);font-size:12px">No turns recorded</p>'}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ═══════════════════════
+// INIT
+// ═══════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    buildSummaryCards();
+    buildComparisonTable();
+    buildIssueTypeChart();
+    buildSentimentChart();
+    buildRewardChart();
+    buildTurnsChart();
+    buildDifficultyChart();
+    buildRadarCharts();
+    buildSentimentRecoveryChart();
+    buildQualitativeSection();
+    buildScenarioTable();
+    buildConvoViewer();
+
+    if (INJECTED_METRICS) {
+      document.getElementById('header-subtitle').textContent =
+        `Mistral-Only vs Rule-Based + Mistral vs RL + Mistral · ${new Set(M.raw_results.map(r=>r.scenario_id)).size} scenarios · Real evaluation data`;
+    } else {
+      document.getElementById('header-subtitle').textContent =
+        '⚠️ Showing sample data — run evaluation pipeline to populate with real results';
+    }
+
+    const overlay = document.getElementById('loading-overlay');
+    overlay.style.opacity = '0';
+    setTimeout(() => overlay.style.display = 'none', 400);
+  }, 200);
+});
+</script>
+</body>
+</html>

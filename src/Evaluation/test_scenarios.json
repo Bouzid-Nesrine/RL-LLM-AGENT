@@ -1,0 +1,702 @@
+[
+  {
+    "scenario_id": "TC_01",
+    "issue_type": "delivery_issue",
+    "initial_sentiment": "very_angry",
+    "difficulty": "hard",
+    "description": "Very angry customer, missing package, all slots needed",
+    "customer_opening": "I AM FURIOUS. Order ORD-93810 was due 2024-02-01 and nothing! Your service is a JOKE.",
+    "required_slots": ["order_id", "delivery_date", "address", "carrier"],
+    "customer_replies": {
+      "greet": "Hi. My order ORD-93810 hasn't arrived and I'm very upset.",
+      "ask_info": "Order ID is ORD-93810, due 2024-02-01, address 666 Hickory Blvd Minneapolis MN 55401, carrier USPS.",
+      "confirm_details": "Yes that's correct.",
+      "apologize": "Thanks for apologizing. I just need to know where my package is.",
+      "resolve": "You resolved it without knowing my details? That makes no sense.",
+      "escalate": "Fine, I'll wait for the specialist. Please give them my order ID ORD-93810.",
+      "provide_info": "Okay so it's in transit? When will it arrive exactly?",
+      "tool_query": "What did the tracking show? Is it delayed or lost?",
+      "end_chat": "Goodbye."
+    },
+    "sentiment_transitions": {
+      "greet": "very_angry", "ask_info": "angry", "confirm_details": "angry",
+      "apologize": "frustrated", "resolve": "angry", "escalate": "frustrated",
+      "provide_info": "frustrated", "tool_query": "angry", "end_chat": "very_angry"
+    },
+    "done_conditions": {
+      "resolve": true, "escalate": true, "end_chat": true
+    },
+    "slots_after_reply": {
+      "ask_info": {"order_id": "ORD-93810", "delivery_date": "2024-02-01", "address": "666 Hickory Blvd Minneapolis MN 55401", "carrier": "USPS"},
+      "confirm_details": {"order_id": "ORD-93810", "delivery_date": "2024-02-01", "address": "666 Hickory Blvd Minneapolis MN 55401", "carrier": "USPS"}
+    },
+    "optimal_action_sequence": ["apologize", "ask_info", "confirm_details", "escalate"],
+    "correct_terminal_action": "escalate",
+    "must_not_do": ["resolve_before_info"]
+  },
+  {
+    "scenario_id": "TC_02",
+    "issue_type": "billing_error",
+    "initial_sentiment": "frustrated",
+    "difficulty": "medium",
+    "description": "Frustrated customer charged incorrectly, expects refund",
+    "customer_opening": "I was charged $120 instead of $60 for my subscription. This is unacceptable.",
+    "required_slots": ["account_id", "charge_amount", "expected_amount", "transaction_date"],
+    "customer_replies": {
+      "greet": "Hi yes, I have a billing problem on my account.",
+      "ask_info": "Account is ACC-4421, charged $120 on 2024-01-15, should have been $60.",
+      "confirm_details": "Yes, ACC-4421, $120 charged, should be $60, on January 15th. That's correct.",
+      "apologize": "Thank you. I just want this fixed quickly.",
+      "resolve": "Great, so the $60 refund will be processed? Thank you.",
+      "escalate": "Okay, I'll wait to hear from the billing team.",
+      "provide_info": "I see, so there was a system error?",
+      "tool_query": "What does the billing system show for my account?",
+      "end_chat": "Goodbye."
+    },
+    "sentiment_transitions": {
+      "greet": "frustrated", "ask_info": "frustrated", "confirm_details": "neutral",
+      "apologize": "neutral", "resolve": "satisfied", "escalate": "neutral",
+      "provide_info": "neutral", "tool_query": "frustrated", "end_chat": "frustrated"
+    },
+    "done_conditions": {
+      "resolve": true, "escalate": true, "end_chat": true
+    },
+    "slots_after_reply": {
+      "ask_info": {"account_id": "ACC-4421", "charge_amount": "$120", "expected_amount": "$60", "transaction_date": "2024-01-15"},
+      "confirm_details": {"account_id": "ACC-4421", "charge_amount": "$120", "expected_amount": "$60", "transaction_date": "2024-01-15"}
+    },
+    "optimal_action_sequence": ["apologize", "ask_info", "confirm_details", "resolve"],
+    "correct_terminal_action": "resolve",
+    "must_not_do": ["escalate_without_reason"]
+  },
+  {
+    "scenario_id": "TC_03",
+    "issue_type": "fraud_report",
+    "initial_sentiment": "angry",
+    "difficulty": "hard",
+    "description": "Fraud case - MUST escalate, never resolve directly",
+    "customer_opening": "Someone made unauthorized charges on my account! I did not authorize these transactions!",
+    "required_slots": ["account_id", "transaction_ids", "transaction_date", "amount"],
+    "customer_replies": {
+      "greet": "Hi yes, there are fraudulent charges on my account, I need help immediately.",
+      "ask_info": "My account is ACC-7890, transactions TXN-001 and TXN-002 on 2024-01-20, total $340.",
+      "confirm_details": "Yes correct, those are the fraudulent transactions.",
+      "apologize": "Thank you for taking this seriously.",
+      "resolve": "Wait, you can't just resolve this yourself, this is fraud! I need security involved.",
+      "escalate": "Yes please escalate immediately. I need the fraud team on this.",
+      "provide_info": "I see, what happens next with the investigation?",
+      "tool_query": "What does the system show about these transactions?",
+      "end_chat": "Goodbye."
+    },
+    "sentiment_transitions": {
+      "greet": "angry", "ask_info": "angry", "confirm_details": "angry",
+      "apologize": "frustrated", "resolve": "very_angry", "escalate": "frustrated",
+      "provide_info": "frustrated", "tool_query": "angry", "end_chat": "angry"
+    },
+    "done_conditions": {
+      "resolve": false, "escalate": true, "end_chat": false
+    },
+    "slots_after_reply": {
+      "ask_info": {"account_id": "ACC-7890", "transaction_ids": "TXN-001, TXN-002", "transaction_date": "2024-01-20", "amount": "$340"},
+      "confirm_details": {"account_id": "ACC-7890", "transaction_ids": "TXN-001, TXN-002", "transaction_date": "2024-01-20", "amount": "$340"}
+    },
+    "optimal_action_sequence": ["apologize", "ask_info", "confirm_details", "escalate"],
+    "correct_terminal_action": "escalate",
+    "must_not_do": ["resolve"]
+  },
+  {
+    "scenario_id": "TC_04",
+    "issue_type": "account_access",
+    "initial_sentiment": "frustrated",
+    "difficulty": "easy",
+    "description": "Locked account, standard recovery flow",
+    "customer_opening": "I can't log into my account. I've tried resetting my password three times and it still doesn't work.",
+    "required_slots": ["account_email", "account_id", "last_successful_login"],
+    "customer_replies": {
+      "greet": "Hi, I need help accessing my account, it seems locked.",
+      "ask_info": "My email is john@example.com, account ACC-1234, last logged in about a week ago on January 10th.",
+      "confirm_details": "Yes, john@example.com, ACC-1234, last login January 10th. Correct.",
+      "apologize": "Thanks, I've been locked out for two days which is frustrating.",
+      "resolve": "Great, I'll try the reset link now. Thank you!",
+      "escalate": "Okay, I'll wait for the account specialist.",
+      "provide_info": "I see, so my account was flagged for security?",
+      "tool_query": "What does the system show about my account status?",
+      "end_chat": "Goodbye."
+    },
+    "sentiment_transitions": {
+      "greet": "frustrated", "ask_info": "neutral", "confirm_details": "neutral",
+      "apologize": "neutral", "resolve": "satisfied", "escalate": "neutral",
+      "provide_info": "neutral", "tool_query": "neutral", "end_chat": "frustrated"
+    },
+    "done_conditions": {
+      "resolve": true, "escalate": true, "end_chat": true
+    },
+    "slots_after_reply": {
+      "ask_info": {"account_email": "john@example.com", "account_id": "ACC-1234", "last_successful_login": "2024-01-10"},
+      "confirm_details": {"account_email": "john@example.com", "account_id": "ACC-1234", "last_successful_login": "2024-01-10"}
+    },
+    "optimal_action_sequence": ["ask_info", "confirm_details", "resolve"],
+    "correct_terminal_action": "resolve",
+    "must_not_do": ["escalate_without_reason"]
+  },
+  {
+    "scenario_id": "TC_05",
+    "issue_type": "shipping_damage",
+    "initial_sentiment": "angry",
+    "difficulty": "medium",
+    "description": "Package arrived visibly damaged, customer wants replacement",
+    "customer_opening": "My package arrived completely smashed. The box is crushed and the item inside is broken. I'm really angry.",
+    "required_slots": ["order_id", "damage_description", "carrier", "delivery_date"],
+    "customer_replies": {
+      "greet": "Hi, I received a damaged package and I want a replacement immediately.",
+      "ask_info": "Order ORD-55234, delivered by FedEx on 2024-01-18, the laptop screen is cracked.",
+      "confirm_details": "Yes, ORD-55234, FedEx, January 18th, cracked laptop screen. All correct.",
+      "apologize": "I appreciate the apology. I just need this resolved fast.",
+      "resolve": "Okay, so a replacement will be sent within 3-5 days? That works for me.",
+      "escalate": "Fine, the specialist can reach me at the same number on my account.",
+      "provide_info": "Okay, so I need to file a claim with FedEx too?",
+      "tool_query": "What's the status in your system for this order?",
+      "end_chat": "Goodbye."
+    },
+    "sentiment_transitions": {
+      "greet": "angry", "ask_info": "angry", "confirm_details": "frustrated",
+      "apologize": "frustrated", "resolve": "satisfied", "escalate": "frustrated",
+      "provide_info": "frustrated", "tool_query": "angry", "end_chat": "angry"
+    },
+    "done_conditions": {
+      "resolve": true, "escalate": true, "end_chat": true
+    },
+    "slots_after_reply": {
+      "ask_info": {"order_id": "ORD-55234", "damage_description": "cracked laptop screen", "carrier": "FedEx", "delivery_date": "2024-01-18"},
+      "confirm_details": {"order_id": "ORD-55234", "damage_description": "cracked laptop screen", "carrier": "FedEx", "delivery_date": "2024-01-18"}
+    },
+    "optimal_action_sequence": ["apologize", "ask_info", "confirm_details", "resolve"],
+    "correct_terminal_action": "resolve",
+    "must_not_do": []
+  },
+  {
+    "scenario_id": "TC_06",
+    "issue_type": "technical_support",
+    "initial_sentiment": "neutral",
+    "difficulty": "easy",
+    "description": "App not working, standard technical troubleshooting",
+    "customer_opening": "Your mobile app keeps crashing every time I try to open it. I've tried reinstalling but same issue.",
+    "required_slots": ["device_type", "os_version", "app_version", "error_message"],
+    "customer_replies": {
+      "greet": "Hi, I need technical help with your mobile app.",
+      "ask_info": "iPhone 13, iOS 17.2, app version 4.1.2, it crashes with error code APP-500.",
+      "confirm_details": "Correct, iPhone 13, iOS 17.2, app 4.1.2, error APP-500.",
+      "apologize": "Okay, thanks for acknowledging the issue.",
+      "resolve": "Alright, I'll try clearing the app cache and updating. Thank you!",
+      "escalate": "Fine, the technical team can contact me at the email on my account.",
+      "provide_info": "I see, so it's a known bug in version 4.1.2?",
+      "tool_query": "What's the known issue with error APP-500?",
+      "end_chat": "Goodbye."
+    },
+    "sentiment_transitions": {
+      "greet": "neutral", "ask_info": "neutral", "confirm_details": "neutral",
+      "apologize": "neutral", "resolve": "satisfied", "escalate": "neutral",
+      "provide_info": "neutral", "tool_query": "neutral", "end_chat": "neutral"
+    },
+    "done_conditions": {
+      "resolve": true, "escalate": true, "end_chat": true
+    },
+    "slots_after_reply": {
+      "ask_info": {"device_type": "iPhone 13", "os_version": "iOS 17.2", "app_version": "4.1.2", "error_message": "APP-500"},
+      "confirm_details": {"device_type": "iPhone 13", "os_version": "iOS 17.2", "app_version": "4.1.2", "error_message": "APP-500"}
+    },
+    "optimal_action_sequence": ["ask_info", "confirm_details", "resolve"],
+    "correct_terminal_action": "resolve",
+    "must_not_do": []
+  },
+  {
+    "scenario_id": "TC_07",
+    "issue_type": "refund_request",
+    "initial_sentiment": "frustrated",
+    "difficulty": "medium",
+    "description": "Customer wants refund for a product they returned 2 weeks ago",
+    "customer_opening": "I returned a product two weeks ago and still haven't received my refund. This is taking way too long.",
+    "required_slots": ["order_id", "return_date", "return_tracking", "refund_amount"],
+    "customer_replies": {
+      "greet": "Hi, I'm following up on a missing refund for a returned item.",
+      "ask_info": "Order ORD-11290, returned on 2024-01-05 via UPS tracking 1Z999, refund should be $89.99.",
+      "confirm_details": "Yes correct, ORD-11290, returned January 5th, UPS 1Z999, $89.99 refund.",
+      "apologize": "Thank you. I just want to know when I'll actually see the money.",
+      "resolve": "Great, so I should see the refund in 2-3 business days? Thank you.",
+      "escalate": "Okay, have the billing team email me at the address on file.",
+      "provide_info": "I see, so there was a processing delay on your end?",
+      "tool_query": "What does the refund system show for this order?",
+      "end_chat": "Goodbye."
+    },
+    "sentiment_transitions": {
+      "greet": "frustrated", "ask_info": "frustrated", "confirm_details": "neutral",
+      "apologize": "neutral", "resolve": "satisfied", "escalate": "neutral",
+      "provide_info": "neutral", "tool_query": "frustrated", "end_chat": "frustrated"
+    },
+    "done_conditions": {
+      "resolve": true, "escalate": true, "end_chat": true
+    },
+    "slots_after_reply": {
+      "ask_info": {"order_id": "ORD-11290", "return_date": "2024-01-05", "return_tracking": "1Z999", "refund_amount": "$89.99"},
+      "confirm_details": {"order_id": "ORD-11290", "return_date": "2024-01-05", "return_tracking": "1Z999", "refund_amount": "$89.99"}
+    },
+    "optimal_action_sequence": ["apologize", "ask_info", "confirm_details", "resolve"],
+    "correct_terminal_action": "resolve",
+    "must_not_do": []
+  },
+  {
+    "scenario_id": "TC_08",
+    "issue_type": "product_defect",
+    "initial_sentiment": "angry",
+    "difficulty": "medium",
+    "description": "Product stopped working after 2 weeks, customer wants exchange",
+    "customer_opening": "The product I bought stopped working after only 2 weeks! This is ridiculous, I want an exchange immediately.",
+    "required_slots": ["product_id", "purchase_date", "defect_description", "order_id"],
+    "customer_replies": {
+      "greet": "Hi, I need to report a defective product I recently purchased.",
+      "ask_info": "Product ID PROD-887, order ORD-44112, purchased 2024-01-02, the battery won't hold charge at all.",
+      "confirm_details": "Yes, PROD-887, order ORD-44112, January 2nd, battery issue. Correct.",
+      "apologize": "Thank you. I expected better quality for the price I paid.",
+      "resolve": "Alright, so an exchange will be shipped within 5 days? That's acceptable.",
+      "escalate": "Okay, have the product team call me on my registered number.",
+      "provide_info": "I see, so this is a known defect in that batch?",
+      "tool_query": "Is there a known issue with this product model?",
+      "end_chat": "Goodbye."
+    },
+    "sentiment_transitions": {
+      "greet": "angry", "ask_info": "frustrated", "confirm_details": "frustrated",
+      "apologize": "frustrated", "resolve": "satisfied", "escalate": "neutral",
+      "provide_info": "neutral", "tool_query": "frustrated", "end_chat": "angry"
+    },
+    "done_conditions": {
+      "resolve": true, "escalate": true, "end_chat": true
+    },
+    "slots_after_reply": {
+      "ask_info": {"product_id": "PROD-887", "purchase_date": "2024-01-02", "defect_description": "battery won't hold charge", "order_id": "ORD-44112"},
+      "confirm_details": {"product_id": "PROD-887", "purchase_date": "2024-01-02", "defect_description": "battery won't hold charge", "order_id": "ORD-44112"}
+    },
+    "optimal_action_sequence": ["apologize", "ask_info", "confirm_details", "resolve"],
+    "correct_terminal_action": "resolve",
+    "must_not_do": []
+  },
+  {
+    "scenario_id": "TC_09",
+    "issue_type": "product_inquiry",
+    "initial_sentiment": "neutral",
+    "difficulty": "easy",
+    "description": "Customer asking about product compatibility and features",
+    "customer_opening": "I want to know if your wireless headphones are compatible with both iPhone and Android devices.",
+    "required_slots": ["product_name", "device_type"],
+    "customer_replies": {
+      "greet": "Hi, I have some questions about a product before I buy it.",
+      "ask_info": "The Wireless Pro Headphones model WH-300, I'll use it with both iPhone 14 and Samsung Galaxy S23.",
+      "confirm_details": "Yes, WH-300, iPhone 14 and Samsung Galaxy S23. That's right.",
+      "apologize": "No worries, I just want to make sure before purchasing.",
+      "resolve": "That's great, so it works with both. I'll go ahead and order. Thanks!",
+      "escalate": "Okay, can the product specialist email me the compatibility details?",
+      "provide_info": "Perfect, and does it support multi-device pairing simultaneously?",
+      "tool_query": "What are the full compatibility specs for WH-300?",
+      "end_chat": "Goodbye."
+    },
+    "sentiment_transitions": {
+      "greet": "neutral", "ask_info": "neutral", "confirm_details": "neutral",
+      "apologize": "neutral", "resolve": "satisfied", "escalate": "neutral",
+      "provide_info": "neutral", "tool_query": "neutral", "end_chat": "neutral"
+    },
+    "done_conditions": {
+      "resolve": true, "provide_info": true, "end_chat": true
+    },
+    "slots_after_reply": {
+      "ask_info": {"product_name": "WH-300 Wireless Pro Headphones", "device_type": "iPhone 14 and Samsung Galaxy S23"},
+      "confirm_details": {"product_name": "WH-300 Wireless Pro Headphones", "device_type": "iPhone 14 and Samsung Galaxy S23"}
+    },
+    "optimal_action_sequence": ["ask_info", "confirm_details", "provide_info"],
+    "correct_terminal_action": "provide_info",
+    "must_not_do": []
+  },
+  {
+    "scenario_id": "TC_10",
+    "issue_type": "response_delay",
+    "initial_sentiment": "frustrated",
+    "difficulty": "easy",
+    "description": "Customer frustrated about waiting 5 days for support response",
+    "customer_opening": "I submitted a support ticket 5 days ago and nobody has responded. This is terrible service.",
+    "required_slots": ["ticket_id", "submission_date", "issue_description"],
+    "customer_replies": {
+      "greet": "Hi, I'm frustrated because my support ticket has been ignored for 5 days.",
+      "ask_info": "Ticket ID TKT-3301, submitted 2024-01-12, about a billing error on my account.",
+      "confirm_details": "Yes, TKT-3301, January 12th, billing error. Correct.",
+      "apologize": "Thank you. Five days is just too long to wait.",
+      "resolve": "Okay, so my original ticket will be addressed within 24 hours? I'll hold you to that.",
+      "escalate": "Fine, have a supervisor call me back today please.",
+      "provide_info": "I see, there was a high volume of tickets this week?",
+      "tool_query": "What's the status of ticket TKT-3301 in your system?",
+      "end_chat": "Goodbye."
+    },
+    "sentiment_transitions": {
+      "greet": "frustrated", "ask_info": "frustrated", "confirm_details": "neutral",
+      "apologize": "neutral", "resolve": "neutral", "escalate": "neutral",
+      "provide_info": "neutral", "tool_query": "frustrated", "end_chat": "frustrated"
+    },
+    "done_conditions": {
+      "resolve": true, "escalate": true, "end_chat": true
+    },
+    "slots_after_reply": {
+      "ask_info": {"ticket_id": "TKT-3301", "submission_date": "2024-01-12", "issue_description": "billing error"},
+      "confirm_details": {"ticket_id": "TKT-3301", "submission_date": "2024-01-12", "issue_description": "billing error"}
+    },
+    "optimal_action_sequence": ["apologize", "ask_info", "confirm_details", "resolve"],
+    "correct_terminal_action": "resolve",
+    "must_not_do": []
+  },
+  {
+    "scenario_id": "TC_11",
+    "issue_type": "account_management",
+    "initial_sentiment": "neutral",
+    "difficulty": "easy",
+    "description": "Customer wants to upgrade subscription plan",
+    "customer_opening": "I'd like to upgrade my current basic plan to the premium subscription.",
+    "required_slots": ["account_id", "current_plan", "desired_plan"],
+    "customer_replies": {
+      "greet": "Hi, I want to change my subscription plan.",
+      "ask_info": "My account is ACC-9977, currently on the Basic plan, want to upgrade to Premium Annual.",
+      "confirm_details": "Yes, ACC-9977, Basic to Premium Annual. That's correct.",
+      "apologize": "No problem, I understand these things take a moment.",
+      "resolve": "Great, so the upgrade is done and I'll be billed the annual rate? Perfect, thanks!",
+      "escalate": "Okay, have the accounts team email me the upgrade confirmation.",
+      "provide_info": "I see, so the price difference will be prorated?",
+      "tool_query": "What are the current Premium Annual pricing details?",
+      "end_chat": "Goodbye."
+    },
+    "sentiment_transitions": {
+      "greet": "neutral", "ask_info": "neutral", "confirm_details": "neutral",
+      "apologize": "neutral", "resolve": "satisfied", "escalate": "neutral",
+      "provide_info": "neutral", "tool_query": "neutral", "end_chat": "neutral"
+    },
+    "done_conditions": {
+      "resolve": true, "escalate": true, "end_chat": true
+    },
+    "slots_after_reply": {
+      "ask_info": {"account_id": "ACC-9977", "current_plan": "Basic", "desired_plan": "Premium Annual"},
+      "confirm_details": {"account_id": "ACC-9977", "current_plan": "Basic", "desired_plan": "Premium Annual"}
+    },
+    "optimal_action_sequence": ["ask_info", "confirm_details", "resolve"],
+    "correct_terminal_action": "resolve",
+    "must_not_do": []
+  },
+  {
+    "scenario_id": "TC_12",
+    "issue_type": "billing_error",
+    "initial_sentiment": "very_angry",
+    "difficulty": "hard",
+    "description": "Customer charged 3 times for same order, extremely angry",
+    "customer_opening": "YOU CHARGED ME THREE TIMES FOR THE SAME ORDER. THREE TIMES! I want all my money back NOW.",
+    "required_slots": ["account_id", "order_id", "charge_count", "total_overcharged"],
+    "customer_replies": {
+      "greet": "Hi, there is a serious problem with my billing and I am extremely upset.",
+      "ask_info": "Account ACC-5531, order ORD-77712, charged 3 times at $45 each, so $90 overcharged.",
+      "confirm_details": "Yes, ACC-5531, ORD-77712, 3 charges, $90 overcharge. Correct.",
+      "apologize": "An apology isn't enough, I need this fixed today.",
+      "resolve": "Okay the $90 refund will be processed today? I'll be watching my account.",
+      "escalate": "Yes get me a supervisor immediately.",
+      "provide_info": "So it was a system glitch? That's unacceptable.",
+      "tool_query": "Look up my account and tell me what you see.",
+      "end_chat": "Goodbye."
+    },
+    "sentiment_transitions": {
+      "greet": "very_angry", "ask_info": "angry", "confirm_details": "angry",
+      "apologize": "angry", "resolve": "frustrated", "escalate": "angry",
+      "provide_info": "angry", "tool_query": "very_angry", "end_chat": "very_angry"
+    },
+    "done_conditions": {
+      "resolve": true, "escalate": true, "end_chat": true
+    },
+    "slots_after_reply": {
+      "ask_info": {"account_id": "ACC-5531", "order_id": "ORD-77712", "charge_count": "3", "total_overcharged": "$90"},
+      "confirm_details": {"account_id": "ACC-5531", "order_id": "ORD-77712", "charge_count": "3", "total_overcharged": "$90"}
+    },
+    "optimal_action_sequence": ["apologize", "ask_info", "confirm_details", "resolve"],
+    "correct_terminal_action": "resolve",
+    "must_not_do": []
+  },
+  {
+    "scenario_id": "TC_13",
+    "issue_type": "delivery_issue",
+    "initial_sentiment": "neutral",
+    "difficulty": "easy",
+    "description": "Package marked delivered but not received, calm customer",
+    "customer_opening": "My tracking shows the package was delivered yesterday but I haven't received anything.",
+    "required_slots": ["order_id", "tracking_number", "delivery_address", "delivery_date"],
+    "customer_replies": {
+      "greet": "Hi, I have a delivery issue I'd like help with.",
+      "ask_info": "Order ORD-20023, tracking TRK-88821, to 42 Oak Street Boston MA 02101, shows delivered 2024-01-19.",
+      "confirm_details": "Yes, ORD-20023, TRK-88821, 42 Oak Street Boston, January 19th. Correct.",
+      "apologize": "Thank you, I appreciate the help.",
+      "resolve": "Great, so you'll investigate and contact the carrier? I'll check with my neighbors too.",
+      "escalate": "Sure, have the delivery team reach out to me.",
+      "provide_info": "I see, so it may have been left with a neighbor?",
+      "tool_query": "What does the carrier tracking show for the exact delivery location?",
+      "end_chat": "Goodbye."
+    },
+    "sentiment_transitions": {
+      "greet": "neutral", "ask_info": "neutral", "confirm_details": "neutral",
+      "apologize": "neutral", "resolve": "satisfied", "escalate": "neutral",
+      "provide_info": "neutral", "tool_query": "neutral", "end_chat": "neutral"
+    },
+    "done_conditions": {
+      "resolve": true, "escalate": true, "end_chat": true
+    },
+    "slots_after_reply": {
+      "ask_info": {"order_id": "ORD-20023", "tracking_number": "TRK-88821", "delivery_address": "42 Oak Street Boston MA 02101", "delivery_date": "2024-01-19"},
+      "confirm_details": {"order_id": "ORD-20023", "tracking_number": "TRK-88821", "delivery_address": "42 Oak Street Boston MA 02101", "delivery_date": "2024-01-19"}
+    },
+    "optimal_action_sequence": ["ask_info", "confirm_details", "resolve"],
+    "correct_terminal_action": "resolve",
+    "must_not_do": []
+  },
+  {
+    "scenario_id": "TC_14",
+    "issue_type": "technical_support",
+    "initial_sentiment": "frustrated",
+    "difficulty": "medium",
+    "description": "Website login not working, customer cannot access services",
+    "customer_opening": "Your website won't let me log in. I keep getting an error page and I need to access my account urgently.",
+    "required_slots": ["browser_type", "error_code", "account_email", "steps_tried"],
+    "customer_replies": {
+      "greet": "Hi, I'm having trouble logging into the website.",
+      "ask_info": "Using Chrome 120, getting error 403, email is sarah@email.com, I've tried clearing cache and different browsers.",
+      "confirm_details": "Yes, Chrome 120, error 403, sarah@email.com, already tried cache clear. Correct.",
+      "apologize": "Thank you. I just need access today for an urgent payment.",
+      "resolve": "Okay so my account should be accessible now? Let me try... yes it works! Thank you.",
+      "escalate": "Okay, have the technical team email me the fix.",
+      "provide_info": "I see, there's ongoing maintenance on the login service?",
+      "tool_query": "What's the current system status for the login service?",
+      "end_chat": "Goodbye."
+    },
+    "sentiment_transitions": {
+      "greet": "frustrated", "ask_info": "frustrated", "confirm_details": "neutral",
+      "apologize": "neutral", "resolve": "satisfied", "escalate": "neutral",
+      "provide_info": "neutral", "tool_query": "frustrated", "end_chat": "frustrated"
+    },
+    "done_conditions": {
+      "resolve": true, "escalate": true, "end_chat": true
+    },
+    "slots_after_reply": {
+      "ask_info": {"browser_type": "Chrome 120", "error_code": "403", "account_email": "sarah@email.com", "steps_tried": "cleared cache, tried different browsers"},
+      "confirm_details": {"browser_type": "Chrome 120", "error_code": "403", "account_email": "sarah@email.com", "steps_tried": "cleared cache, tried different browsers"}
+    },
+    "optimal_action_sequence": ["apologize", "ask_info", "confirm_details", "resolve"],
+    "correct_terminal_action": "resolve",
+    "must_not_do": []
+  },
+  {
+    "scenario_id": "TC_15",
+    "issue_type": "fraud_report",
+    "initial_sentiment": "very_angry",
+    "difficulty": "hard",
+    "description": "Identity theft reported, very distressed customer, MUST escalate",
+    "customer_opening": "Someone has stolen my identity and opened accounts in my name! I am completely devastated.",
+    "required_slots": ["account_id", "fraudulent_accounts", "discovery_date", "police_report"],
+    "customer_replies": {
+      "greet": "Hi, this is extremely urgent. I'm a victim of identity theft.",
+      "ask_info": "My account ACC-3312, discovered on 2024-01-17, three fraudulent accounts opened, police report #PR-2024-0117.",
+      "confirm_details": "Yes, ACC-3312, three fraudulent accounts, discovered January 17th, police report PR-2024-0117.",
+      "apologize": "Thank you. I'm really distressed and need immediate help.",
+      "resolve": "You cannot resolve identity theft yourself! I need your security and legal team NOW.",
+      "escalate": "Yes please, I need the fraud specialist and security team immediately.",
+      "provide_info": "What steps do I need to take to protect my remaining accounts?",
+      "tool_query": "What fraud alerts are on my account currently?",
+      "end_chat": "Goodbye."
+    },
+    "sentiment_transitions": {
+      "greet": "very_angry", "ask_info": "angry", "confirm_details": "angry",
+      "apologize": "frustrated", "resolve": "very_angry", "escalate": "frustrated",
+      "provide_info": "frustrated", "tool_query": "angry", "end_chat": "very_angry"
+    },
+    "done_conditions": {
+      "resolve": false, "escalate": true, "end_chat": false
+    },
+    "slots_after_reply": {
+      "ask_info": {"account_id": "ACC-3312", "fraudulent_accounts": "3 accounts", "discovery_date": "2024-01-17", "police_report": "PR-2024-0117"},
+      "confirm_details": {"account_id": "ACC-3312", "fraudulent_accounts": "3 accounts", "discovery_date": "2024-01-17", "police_report": "PR-2024-0117"}
+    },
+    "optimal_action_sequence": ["apologize", "ask_info", "confirm_details", "escalate"],
+    "correct_terminal_action": "escalate",
+    "must_not_do": ["resolve"]
+  },
+  {
+    "scenario_id": "TC_16",
+    "issue_type": "refund_request",
+    "initial_sentiment": "neutral",
+    "difficulty": "medium",
+    "description": "Customer wants refund for unused subscription, polite request",
+    "customer_opening": "I'd like to request a refund for my annual subscription. I barely used it and it renewed last week.",
+    "required_slots": ["account_id", "subscription_type", "renewal_date", "reason"],
+    "customer_replies": {
+      "greet": "Hi, I want to request a refund for a subscription renewal.",
+      "ask_info": "Account ACC-6612, Premium Annual subscription, renewed 2024-01-14, I barely used any features.",
+      "confirm_details": "Yes, ACC-6612, Premium Annual, renewed January 14th, low usage. Correct.",
+      "apologize": "Thank you, I appreciate you looking into this.",
+      "resolve": "Great, so the prorated refund will be processed in 5-7 days? That sounds fair.",
+      "escalate": "Okay, have the billing team reach out with options.",
+      "provide_info": "I see, what's the refund policy for annual subscriptions within 30 days?",
+      "tool_query": "What is the usage history for my account?",
+      "end_chat": "Goodbye."
+    },
+    "sentiment_transitions": {
+      "greet": "neutral", "ask_info": "neutral", "confirm_details": "neutral",
+      "apologize": "neutral", "resolve": "satisfied", "escalate": "neutral",
+      "provide_info": "neutral", "tool_query": "neutral", "end_chat": "neutral"
+    },
+    "done_conditions": {
+      "resolve": true, "escalate": true, "end_chat": true
+    },
+    "slots_after_reply": {
+      "ask_info": {"account_id": "ACC-6612", "subscription_type": "Premium Annual", "renewal_date": "2024-01-14", "reason": "low usage"},
+      "confirm_details": {"account_id": "ACC-6612", "subscription_type": "Premium Annual", "renewal_date": "2024-01-14", "reason": "low usage"}
+    },
+    "optimal_action_sequence": ["ask_info", "confirm_details", "resolve"],
+    "correct_terminal_action": "resolve",
+    "must_not_do": []
+  },
+  {
+    "scenario_id": "TC_17",
+    "issue_type": "shipping_damage",
+    "initial_sentiment": "very_angry",
+    "difficulty": "hard",
+    "description": "High-value item destroyed in shipping, customer threatening legal action",
+    "customer_opening": "My $800 camera lens arrived completely shattered. I am considering legal action if this isn't resolved TODAY.",
+    "required_slots": ["order_id", "product_value", "damage_description", "carrier"],
+    "customer_replies": {
+      "greet": "Hi, I have an extremely serious complaint about a high-value damaged shipment.",
+      "ask_info": "Order ORD-99001, $800 camera lens, completely shattered, shipped via DHL.",
+      "confirm_details": "Yes, ORD-99001, $800 lens, shattered by DHL. That's correct.",
+      "apologize": "An apology doesn't fix a shattered $800 lens. What are you going to DO?",
+      "resolve": "You're going to send a replacement or issue a full refund immediately? Okay, which one?",
+      "escalate": "Yes get me your manager NOW.",
+      "provide_info": "So you'll file a claim with DHL? What does that mean for my replacement timeline?",
+      "tool_query": "What does the shipping insurance cover for this order?",
+      "end_chat": "Goodbye."
+    },
+    "sentiment_transitions": {
+      "greet": "very_angry", "ask_info": "very_angry", "confirm_details": "angry",
+      "apologize": "angry", "resolve": "frustrated", "escalate": "angry",
+      "provide_info": "angry", "tool_query": "very_angry", "end_chat": "very_angry"
+    },
+    "done_conditions": {
+      "resolve": true, "escalate": true, "end_chat": true
+    },
+    "slots_after_reply": {
+      "ask_info": {"order_id": "ORD-99001", "product_value": "$800", "damage_description": "camera lens completely shattered", "carrier": "DHL"},
+      "confirm_details": {"order_id": "ORD-99001", "product_value": "$800", "damage_description": "camera lens completely shattered", "carrier": "DHL"}
+    },
+    "optimal_action_sequence": ["apologize", "ask_info", "confirm_details", "escalate"],
+    "correct_terminal_action": "escalate",
+    "must_not_do": []
+  },
+  {
+    "scenario_id": "TC_18",
+    "issue_type": "account_access",
+    "initial_sentiment": "angry",
+    "difficulty": "medium",
+    "description": "Account hacked, customer locked out by attacker",
+    "customer_opening": "My account has been hacked! Someone changed my email and password and now I can't get in. I'm furious!",
+    "required_slots": ["original_email", "account_id", "last_known_password_date", "suspicious_activity"],
+    "customer_replies": {
+      "greet": "Hi, my account was compromised and I've been locked out by the hacker.",
+      "ask_info": "Original email mike@domain.com, account ACC-8823, I last changed my password January 1st, I see logins from an unknown IP.",
+      "confirm_details": "Yes, mike@domain.com, ACC-8823, last password change Jan 1st, unknown IP logins. Correct.",
+      "apologize": "Thank you for understanding. I need my account back urgently.",
+      "resolve": "Okay so the account recovery process is started? How long will it take?",
+      "escalate": "Yes please involve the security team immediately.",
+      "provide_info": "What steps should I take to secure my other accounts too?",
+      "tool_query": "What unusual activity does the system show on my account?",
+      "end_chat": "Goodbye."
+    },
+    "sentiment_transitions": {
+      "greet": "angry", "ask_info": "angry", "confirm_details": "frustrated",
+      "apologize": "frustrated", "resolve": "neutral", "escalate": "frustrated",
+      "provide_info": "neutral", "tool_query": "angry", "end_chat": "angry"
+    },
+    "done_conditions": {
+      "resolve": true, "escalate": true, "end_chat": true
+    },
+    "slots_after_reply": {
+      "ask_info": {"original_email": "mike@domain.com", "account_id": "ACC-8823", "last_known_password_date": "2024-01-01", "suspicious_activity": "logins from unknown IP"},
+      "confirm_details": {"original_email": "mike@domain.com", "account_id": "ACC-8823", "last_known_password_date": "2024-01-01", "suspicious_activity": "logins from unknown IP"}
+    },
+    "optimal_action_sequence": ["apologize", "ask_info", "confirm_details", "escalate"],
+    "correct_terminal_action": "escalate",
+    "must_not_do": []
+  },
+  {
+    "scenario_id": "TC_19",
+    "issue_type": "product_defect",
+    "initial_sentiment": "neutral",
+    "difficulty": "easy",
+    "description": "Minor product defect, customer wants warranty repair",
+    "customer_opening": "I noticed a small defect on my recently purchased item. The screen has a dead pixel. Can I get a warranty repair?",
+    "required_slots": ["product_id", "purchase_date", "warranty_status", "defect_description"],
+    "customer_replies": {
+      "greet": "Hi, I'd like to arrange a warranty repair for a product I bought.",
+      "ask_info": "Product WM-200 monitor, order ORD-33102, bought 2023-12-15, single dead pixel in the center.",
+      "confirm_details": "Yes, WM-200, December 15th 2023, dead pixel in center. Correct.",
+      "apologize": "No problem, I understand quality control isn't always perfect.",
+      "resolve": "Great, so I'll receive the repair instructions by email? Thank you!",
+      "escalate": "Sure, have the warranty department contact me.",
+      "provide_info": "I see, so the warranty covers dead pixels? Good to know.",
+      "tool_query": "What's the warranty status for this product?",
+      "end_chat": "Goodbye."
+    },
+    "sentiment_transitions": {
+      "greet": "neutral", "ask_info": "neutral", "confirm_details": "neutral",
+      "apologize": "neutral", "resolve": "satisfied", "escalate": "neutral",
+      "provide_info": "neutral", "tool_query": "neutral", "end_chat": "neutral"
+    },
+    "done_conditions": {
+      "resolve": true, "escalate": true, "end_chat": true
+    },
+    "slots_after_reply": {
+      "ask_info": {"product_id": "WM-200", "purchase_date": "2023-12-15", "warranty_status": "active", "defect_description": "single dead pixel in center"},
+      "confirm_details": {"product_id": "WM-200", "purchase_date": "2023-12-15", "warranty_status": "active", "defect_description": "single dead pixel in center"}
+    },
+    "optimal_action_sequence": ["ask_info", "confirm_details", "resolve"],
+    "correct_terminal_action": "resolve",
+    "must_not_do": []
+  },
+  {
+    "scenario_id": "TC_20",
+    "issue_type": "delivery_issue",
+    "initial_sentiment": "frustrated",
+    "difficulty": "hard",
+    "description": "Sentiment escalation mid-conversation: starts frustrated, becomes very_angry",
+    "customer_opening": "My order hasn't arrived and it's 3 days late. I'm getting really frustrated with the delays.",
+    "required_slots": ["order_id", "delivery_date", "address", "carrier"],
+    "customer_replies": {
+      "greet": "Hi, I need help with a late delivery.",
+      "ask_info": "Order ORD-67123, should have arrived January 15th, to 99 Pine Ave Chicago IL 60601, shipped via UPS. AND NOW I'M EVEN MORE ANGRY BECAUSE I JUST GOT A NEW EMAIL SAYING IT'S DELAYED AGAIN.",
+      "confirm_details": "YES IT'S CORRECT. When will it actually arrive?!",
+      "apologize": "Fine but how many times are you going to apologize? I need ACTION not apologies.",
+      "resolve": "Resolving this without proper investigation? This keeps happening and I am DONE with your service.",
+      "escalate": "FINALLY. Someone who will actually DO something. Yes escalate this.",
+      "provide_info": "What do you mean it's in transit? It was supposed to be here 3 days ago!",
+      "tool_query": "Just check your system and tell me WHERE my package is RIGHT NOW.",
+      "end_chat": "Goodbye."
+    },
+    "sentiment_transitions": {
+      "greet": "frustrated", "ask_info": "very_angry", "confirm_details": "very_angry",
+      "apologize": "angry", "resolve": "very_angry", "escalate": "frustrated",
+      "provide_info": "angry", "tool_query": "very_angry", "end_chat": "very_angry"
+    },
+    "done_conditions": {
+      "resolve": true, "escalate": true, "end_chat": true
+    },
+    "slots_after_reply": {
+      "ask_info": {"order_id": "ORD-67123", "delivery_date": "2024-01-15", "address": "99 Pine Ave Chicago IL 60601", "carrier": "UPS"},
+      "confirm_details": {"order_id": "ORD-67123", "delivery_date": "2024-01-15", "address": "99 Pine Ave Chicago IL 60601", "carrier": "UPS"}
+    },
+    "optimal_action_sequence": ["apologize", "ask_info", "confirm_details", "escalate"],
+    "correct_terminal_action": "escalate",
+    "must_not_do": ["resolve_without_info"]
+  }
+]
